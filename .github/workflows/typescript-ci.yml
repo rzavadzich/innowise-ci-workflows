@@ -1,0 +1,53 @@
+name: TypeScript CI
+
+on:
+  workflow_call:
+    inputs:
+      working-directory:
+        description: 'Directory to run commands in'
+        required: false
+        default: '.'
+        type: string
+
+jobs:
+  setup:
+    uses: ./.github/workflows/node-setup.yml
+
+  lint:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
+      - run: npm ci
+      - run: npm run lint --prefix ${{ inputs.working-directory }}
+
+  build:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
+      - run: npm ci
+      - run: npm run build --prefix ${{ inputs.working-directory }}
+
+  test:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
+      - run: npm ci
+      - run: npm test --prefix ${{ inputs.working-directory }}
