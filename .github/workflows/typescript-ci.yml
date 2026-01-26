@@ -36,6 +36,10 @@ jobs:
           name: node-modules-${{ github.run_id }}
           path: ${{ inputs.working-directory }}/node_modules
 
+      - name: Rebuild bin links
+        run: npm rebuild
+        working-directory: ${{ inputs.working-directory }}
+
       - name: Run linting
         run: npm run lint
         working-directory: ${{ inputs.working-directory }}
@@ -55,6 +59,10 @@ jobs:
           name: node-modules-${{ github.run_id }}
           path: ${{ inputs.working-directory }}/node_modules
 
+      - name: Rebuild bin links
+        run: npm rebuild
+        working-directory: ${{ inputs.working-directory }}
+
       - name: Run build
         run: npm run build
         working-directory: ${{ inputs.working-directory }}
@@ -73,6 +81,10 @@ jobs:
         with:
           name: node-modules-${{ github.run_id }}
           path: ${{ inputs.working-directory }}/node_modules
+
+      - name: Rebuild bin links
+        run: npm rebuild
+        working-directory: ${{ inputs.working-directory }}
 
       - name: Run tests
         run: npm test
