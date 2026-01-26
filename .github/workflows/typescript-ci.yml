@@ -15,14 +15,7 @@ on:
         type: string
 
 jobs:
-  install:
-    uses: ./.github/workflows/node-setup.yml
-    with:
-      node-version: ${{ inputs.node-version }}
-      working-directory: ${{ inputs.working-directory }}
-
   lint:
-    needs: install
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -30,14 +23,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ inputs.node-version }}
+          cache: 'npm'
+          cache-dependency-path: '${{ inputs.working-directory }}/package-lock.json'
 
-      - uses: actions/download-artifact@v4
-        with:
-          name: node-modules-${{ github.run_id }}
-          path: ${{ inputs.working-directory }}/node_modules
-
-      - name: Rebuild bin links
-        run: npm rebuild
+      - name: Install dependencies
+        run: npm ci
         working-directory: ${{ inputs.working-directory }}
 
       - name: Run linting
@@ -45,7 +35,6 @@ jobs:
         working-directory: ${{ inputs.working-directory }}
 
   build:
-    needs: install
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -53,14 +42,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ inputs.node-version }}
+          cache: 'npm'
+          cache-dependency-path: '${{ inputs.working-directory }}/package-lock.json'
 
-      - uses: actions/download-artifact@v4
-        with:
-          name: node-modules-${{ github.run_id }}
-          path: ${{ inputs.working-directory }}/node_modules
-
-      - name: Rebuild bin links
-        run: npm rebuild
+      - name: Install dependencies
+        run: npm ci
         working-directory: ${{ inputs.working-directory }}
 
       - name: Run build
@@ -68,7 +54,6 @@ jobs:
         working-directory: ${{ inputs.working-directory }}
 
   test:
-    needs: install
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -76,14 +61,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ inputs.node-version }}
+          cache: 'npm'
+          cache-dependency-path: '${{ inputs.working-directory }}/package-lock.json'
 
-      - uses: actions/download-artifact@v4
-        with:
-          name: node-modules-${{ github.run_id }}
-          path: ${{ inputs.working-directory }}/node_modules
-
-      - name: Rebuild bin links
-        run: npm rebuild
+      - name: Install dependencies
+        run: npm ci
         working-directory: ${{ inputs.working-directory }}
 
       - name: Run tests
