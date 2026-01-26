@@ -9,10 +9,24 @@ on:
         default: 'https://npm.pkg.github.com'
         type: string
       tag:
-        description: 'npm publish tag'
+        description: 'npm publish tag (e.g., latest, rc)'
         required: false
         default: 'latest'
         type: string
+      version-suffix:
+        description: 'Version suffix to append (e.g., -dev-abc123). Leave empty for package.json version.'
+        required: false
+        default: ''
+        type: string
+      check-version-exists:
+        description: 'Fail if version already exists in registry'
+        required: false
+        default: false
+        type: boolean
+    outputs:
+      published-version:
+        description: 'The version that was published'
+        value: ${{ jobs.publish.outputs.version }}
 
 jobs:
   publish:
@@ -20,18 +34,60 @@ jobs:
     permissions:
       contents: read
       packages: write
+    outputs:
+      version: ${{ steps.final-version.outputs.version }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
           registry-url: ${{ inputs.registry }}
           cache: 'npm'
           cache-dependency-path: '**/package-lock.json'
-      
-      - run: npm ci
-      - run: npm run build
-      
-      - run: npm publish --tag ${{ inputs.tag }}
+
+      - name: Get base version
+        id: base-version
+        run: echo "version=$(npm pkg get version | tr -d '\"')" >> $GITHUB_OUTPUT
+
+      - name: Calculate final version
+        id: final-version
+        run: |
+          BASE="${{ steps.base-version.outputs.version }}"
+          SUFFIX="${{ inputs.version-suffix }}"
+          if [ -n "$SUFFIX" ]; then
+            FINAL="${BASE}${SUFFIX}"
+          else
+            FINAL="$BASE"
+          fi
+          echo "version=$FINAL" >> $GITHUB_OUTPUT
+
+      - name: Check if version exists
+        if: inputs.check-version-exists
+        run: |
+          PACKAGE_NAME=$(npm pkg get name | tr -d '"')
+          VERSION="${{ steps.final-version.outputs.version }}"
+          if npm view "${PACKAGE_NAME}@${VERSION}" --registry=${{ inputs.registry }} > /dev/null 2>&1; then
+            echo "::error::Version ${VERSION} already exists in registry!"
+            exit 1
+          fi
+          echo "✅ Version ${VERSION} is available"
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set version
+        if: inputs.version-suffix != ''
+        run: npm version ${{ steps.final-version.outputs.version }} --no-git-tag-version
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Publish
+        run: npm publish --tag ${{ inputs.tag }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

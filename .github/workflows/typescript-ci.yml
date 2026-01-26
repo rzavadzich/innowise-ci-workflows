@@ -8,46 +8,72 @@ on:
         required: false
         default: '.'
         type: string
+      node-version:
+        description: 'Node.js version to use'
+        required: false
+        default: '24'
+        type: string
 
 jobs:
-  setup:
+  install:
     uses: ./.github/workflows/node-setup.yml
+    with:
+      node-version: ${{ inputs.node-version }}
+      working-directory: ${{ inputs.working-directory }}
 
   lint:
-    needs: setup
+    needs: install
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
-          node-version: '24'
-          cache: 'npm'
-          cache-dependency-path: '**/package-lock.json'
-      - run: npm ci
-      - run: npm run lint --prefix ${{ inputs.working-directory }}
+          node-version: ${{ inputs.node-version }}
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: node-modules-${{ github.run_id }}
+          path: ${{ inputs.working-directory }}/node_modules
+
+      - name: Run linting
+        run: npm run lint
+        working-directory: ${{ inputs.working-directory }}
 
   build:
-    needs: setup
+    needs: install
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
-          node-version: '24'
-          cache: 'npm'
-          cache-dependency-path: '**/package-lock.json'
-      - run: npm ci
-      - run: npm run build --prefix ${{ inputs.working-directory }}
+          node-version: ${{ inputs.node-version }}
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: node-modules-${{ github.run_id }}
+          path: ${{ inputs.working-directory }}/node_modules
+
+      - name: Run build
+        run: npm run build
+        working-directory: ${{ inputs.working-directory }}
 
   test:
-    needs: setup
+    needs: install
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
-          node-version: '24'
-          cache: 'npm'
-          cache-dependency-path: '**/package-lock.json'
-      - run: npm ci
-      - run: npm test --prefix ${{ inputs.working-directory }}
+          node-version: ${{ inputs.node-version }}
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: node-modules-${{ github.run_id }}
+          path: ${{ inputs.working-directory }}/node_modules
+
+      - name: Run tests
+        run: npm test
+        working-directory: ${{ inputs.working-directory }}
