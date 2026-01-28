@@ -4,25 +4,16 @@ This repository contains reusable GitHub Actions workflows designed for Node.js 
 
 ## Workflows
 
-### 1. Node.js Setup (`node-setup.yml`)
-Reusable workflow for consistent Node.js project setup with shared `node_modules` via artifacts.
+### 1. TypeScript CI (`typescript-ci.yml`)
+Reusable workflow for running code quality checks and tests in parallel.
 
-- **Capabilities**: Configures Node.js environment, installs dependencies using `npm ci`, and uploads `node_modules` as an artifact for downstream jobs.
-- **Inputs**:
-  - `node-version`: The version of Node.js to use (default: `24`).
-  - `working-directory`: Directory to run commands in (default: `.`).
-- **Artifact**: Uploads `node_modules` as `node-modules-${{ github.run_id }}` for reuse by dependent jobs.
-
-### 2. TypeScript CI (`typescript-ci.yml`)
-Reusable workflow for running code quality checks and tests with shared dependency caching.
-
-- **Capabilities**: Executes linting, dual-module build (ESM/CJS), and unit tests. Uses shared `node_modules` artifact to avoid redundant `npm ci` calls.
+- **Capabilities**: Executes linting, dual-module build (ESM/CJS), and unit tests in parallel jobs.
 - **Inputs**:
   - `working-directory`: Directory to run commands in (default: `.`).
   - `node-version`: The version of Node.js to use (default: `24`).
-- **Jobs**: `install` → `lint`, `build`, `test` (parallel, using shared artifact)
+- **Jobs**: `lint`, `build`, `test` (parallel)
 
-### 3. npm Publish (`npm-publish.yml`)
+### 2. npm Publish (`npm-publish.yml`)
 Reusable workflow for publishing packages to GitHub Packages or npm registry with optional RC version support.
 
 - **Capabilities**: Builds and publishes the package with configurable versioning and existence checks.
@@ -33,6 +24,15 @@ Reusable workflow for publishing packages to GitHub Packages or npm registry wit
   - `check-version-exists`: Fail if version already exists in registry (default: `false`).
 - **Outputs**:
   - `published-version`: The version that was published.
+- **Secrets**: Uses `GITHUB_TOKEN` for authentication (inherited).
+
+### 3. Create Release (`create-release.yml`)
+Reusable workflow for creating Git tags and GitHub Releases from package.json version.
+
+- **Capabilities**: Creates a `vX.Y.Z` tag and GitHub Release with auto-generated notes.
+- **Outputs**:
+  - `version`: The version from package.json.
+  - `tag`: The git tag that was created (e.g., `v1.0.0`).
 - **Secrets**: Uses `GITHUB_TOKEN` for authentication (inherited).
 
 ## Usage Examples
@@ -78,6 +78,17 @@ jobs:
     with:
       tag: latest
       check-version-exists: true
+```
+
+### Create GitHub Release
+
+```yaml
+jobs:
+  create-release:
+    permissions:
+      contents: write
+    uses: rzavadzich/innowise-ci-workflows/.github/workflows/create-release.yml@main
+    secrets: inherit
 ```
 
 ## Methodology
