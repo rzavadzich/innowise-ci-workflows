@@ -13,20 +13,21 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     outputs:
       version: ${{ steps.create.outputs.version }}
       tag: ${{ steps.create.outputs.tag }}
-    permissions:
-      contents: write
     steps:
       - uses: actions/checkout@v4
 
-      - name: Create Git Tag and GitHub Release
+      - name: Create tag and release
         id: create
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           VERSION=$(npm pkg get version | tr -d '"')
           TAG="v${VERSION}"
-
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "tag=$TAG" >> $GITHUB_OUTPUT
 
@@ -35,5 +36,3 @@ jobs:
           git tag "$TAG"
           git push origin "$TAG"
           gh release create "$TAG" --generate-notes
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

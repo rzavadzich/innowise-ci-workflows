@@ -5,69 +5,55 @@ on:
     inputs:
       working-directory:
         description: 'Directory to run commands in'
-        required: false
-        default: '.'
         type: string
+        default: '.'
       node-version:
         description: 'Node.js version to use'
-        required: false
-        default: '24'
         type: string
+        default: '24'
 
 jobs:
   lint:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ inputs.working-directory }}
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ inputs.node-version }}
-          cache: 'npm'
-          cache-dependency-path: '${{ inputs.working-directory }}/package-lock.json'
-
-      - name: Install dependencies
-        run: npm ci
-        working-directory: ${{ inputs.working-directory }}
-
-      - name: Run linting
-        run: npm run lint
-        working-directory: ${{ inputs.working-directory }}
+          cache: npm
+          cache-dependency-path: ${{ inputs.working-directory }}/package-lock.json
+      - run: npm ci
+      - run: npm run lint
 
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ inputs.working-directory }}
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ inputs.node-version }}
-          cache: 'npm'
-          cache-dependency-path: '${{ inputs.working-directory }}/package-lock.json'
-
-      - name: Install dependencies
-        run: npm ci
-        working-directory: ${{ inputs.working-directory }}
-
-      - name: Run build
-        run: npm run build
-        working-directory: ${{ inputs.working-directory }}
+          cache: npm
+          cache-dependency-path: ${{ inputs.working-directory }}/package-lock.json
+      - run: npm ci
+      - run: npm run build
 
   test:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ inputs.working-directory }}
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ inputs.node-version }}
-          cache: 'npm'
-          cache-dependency-path: '${{ inputs.working-directory }}/package-lock.json'
-
-      - name: Install dependencies
-        run: npm ci
-        working-directory: ${{ inputs.working-directory }}
-
-      - name: Run tests
-        run: npm test
-        working-directory: ${{ inputs.working-directory }}
+          cache: npm
+          cache-dependency-path: ${{ inputs.working-directory }}/package-lock.json
+      - run: npm ci
+      - run: npm test
